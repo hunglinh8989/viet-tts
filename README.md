@@ -54,11 +54,8 @@ docker compose build
 # Run with docker-compose - will create server at: http://localhost:8298
 docker compose up -d
 
-# Run with docker run - will create server at: http://localhost:8298
+# Or run with docker run - will create server at: http://localhost:8298
 docker run -itd --gpu=alls -p 8298:8298 -v ./pretrained-models:/app/pretrained-models -n viet-tts-service viet-tts:latest viettts server --host 0.0.0.0 --port 8298
-
-# Show available voices
-docker exec viet-tts-service viettts show-voices
 ```
 
 ## 🚀 Usage

@@ -107,7 +107,8 @@ def cli():
     """
     VietTTS CLI v0.1.0
     
-    Vietnamese Text To Speech and Voice Clone - License: Apache 2.0 - Author: <dangvansam dangvansam98@gmail.com>
+    Vietnamese Text To Speech and Voice Clone
+    License: Apache 2.0 - Author: <dangvansam dangvansam98@gmail.com>
     """
     pass
 

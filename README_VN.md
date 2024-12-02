@@ -53,9 +53,6 @@ docker compose up -d
 
 # Chạy bằng docker run - tạo server tại: http://localhost:8298
 docker run -itd --gpu=alls -p 8298:8298 -v ./pretrained-models:/app/pretrained-models -n viet-tts-service viet-tts:latest viettts server --host 0.0.0.0 --port 8298
-
-# Hiển thị danh sách giọng nói sẵn có
-docker exec viet-tts-service viettts show-voices
 ```
 
 ## 🚀 Sử dụng
