@@ -26,10 +26,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install Python environment with conda
       run: |
-        # (Optional) Install Python environment with conda, you could also use virtualenv
-        conda create --name viettts python=${{ matrix.python-version }} -y
-        source ~/anaconda3/etc/profile.d/conda.sh
-        conda activate viettts
         pip install -e . && pip cache purge
     - name: Test viettts CLI
       run: |
