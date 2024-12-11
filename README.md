@@ -24,7 +24,7 @@
 
 ## 🛠️ Installation
 
-VietTTS can be installed via either a Python installer or Docker.
+VietTTS can be installed via a Python installer (Linux only, with Windows and macOS support coming soon) or Docker.
 
 ### Python Installer
 ```bash
@@ -105,11 +105,14 @@ viettts --help
 # Start API Server
 viettts server --host 0.0.0.0 --port 8298
 
-# Synthesis speech from text
-viettts synthesis --text "Xin chào" --voice 0 --output test.wav
-
 # List all built-in voices
 viettts show-voices
+
+# Synthesize speech from text with built-in voices
+viettts synthesis --text "Xin chào" --voice 0 --output test.wav
+
+# Clone voice from a local audio file
+viettts synthesis --text "Xin chào" --voice Download/voice.wav --output cloned.wav
 ```
 
 ### API Client

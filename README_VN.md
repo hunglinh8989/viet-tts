@@ -21,7 +21,7 @@
 - **VC**: Chuyển đổi giọng nói (TODO)
 
 ## 🛠️ Cài đặt
-VietTTS có thể cài đặt qua trình cài đặt Python hoặc Docker.
+VietTTS có thể được cài đặt qua trình cài đặt Python (chỉ hỗ trợ Linux, Windows và macOS sẽ có trong tương lai) hoặc Docker.
 
 ### Trình cài đặt Python
 
@@ -106,11 +106,14 @@ viettts --help
 # Khởi động API Server
 viettts server --host 0.0.0.0 --port 8298
 
-# Tổng hợp giọng nói từ văn bản
+# Xem tất cả các giọng nói có sẵn
+viettts show-voices
+
+# Tổng hợp giọng nói từ văn bản với giọng có sẵn
 viettts synthesis --text "Xin chào" --voice 0 --output test.wav
 
-# Liệt kê tất cả các giọng nói có sẵn
-viettts show-voices
+# Sao chép giọng từ audio file bất kì
+viettts synthesis --text "Xin chào" --voice Download/voice.wav --output cloned.wav
 ```
 
 ### API Client
