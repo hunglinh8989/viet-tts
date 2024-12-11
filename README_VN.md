@@ -149,6 +149,10 @@ with client.audio.speech.with_streaming_response.create(
 
 #### CURL
 ```bash
+# Lấy danh sách giọng có sẵn
+curl --location http://0.0.0.0:8298/v1/voices
+
+# OpenAI API format
 curl http://localhost:8298/v1/audio/speech \
   -H "Authorization: Bearer viet-tts" \
   -H "Content-Type: application/json" \
@@ -158,6 +162,12 @@ curl http://localhost:8298/v1/audio/speech \
     "voice": "son-tung-mtp"
   }' \
   --output speech.wav
+
+# API với giọng từ file local
+curl --location http://0.0.0.0:8298/v1/tts \
+  --form 'text="xin chào"' \
+  --form 'audio_file=@"/home/viettts/Downloads/voice.mp4"' \
+  --output speech.wav
 ```
 
 #### Node

@@ -144,14 +144,24 @@ with client.audio.speech.with_streaming_response.create(
 
 #### CURL
 ```bash
+# Get all built-in voices
+curl --location http://0.0.0.0:8298/v1/voices
+
+# OpenAI format (bult-in voices)
 curl http://localhost:8298/v1/audio/speech \
-  -H "Authorization: Bearer viet-tts" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "tts-1",
-    "input": "Xin chào Việt Nam.",
-    "voice": "son-tung-mtp"
-  }' \
+  -H "Authorization: Bearer viet-tts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "tts-1",
+    "input": "Xin chào Việt Nam.",
+    "voice": "son-tung-mtp"
+  }' \
+  --output speech.wav
+
+# API with voice from local file
+curl --location http://0.0.0.0:8298/v1/tts \
+  --form 'text="xin chào"' \
+  --form 'audio_file=@"/home/viettts/Downloads/voice.mp4"' \
   --output speech.wav
 ```
 
