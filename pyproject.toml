@@ -31,6 +31,7 @@ huggingface-hub = "0.24.7"
 click = "^8.1.7"
 gunicorn = "^23.0.0"
 silero-vad = "^5.1.2"
+whisper = "^1.1.10"
 
 [tool.poetry.scripts]
 viettts = "viettts.cli:cli"
