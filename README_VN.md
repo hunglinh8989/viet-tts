@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/viet-tts-medium.png" style="width: 22%">
+  <img src="assets/viet-tts-medium.png" style="width: 200px">
   <h1 align="center" style="color: white; font-weight: bold; font-family:roboto"><span style="color: white; font-weight: bold; font-family:roboto">VietTTS</span>: Công cụ chuyển văn bản thành giọng nói tiếng Việt mã nguồn mở</h1>
 </p>
 <p align="center">
@@ -18,10 +18,10 @@
 
 ## ⭐ Tính năng nổi bật
 - **TTS**: Tổng hợp giọng nói từ văn bản với bất kỳ giọng nào qua audio mẫu
-- **VC**: Chuyển đổi giọng nói (TODO)
+- **OpenAI-API-compatible**: Tương thích với API Text to Speech OpenAI
 
 ## 🛠️ Cài đặt
-VietTTS có thể cài đặt qua trình cài đặt Python hoặc Docker.
+VietTTS có thể được cài đặt qua trình cài đặt Python (chỉ hỗ trợ Linux, Windows và macOS sẽ có trong tương lai) hoặc Docker.
 
 ### Trình cài đặt Python
 
@@ -53,9 +53,6 @@ docker compose up -d
 
 # Chạy bằng docker run - tạo server tại: http://localhost:8298
 docker run -itd --gpu=alls -p 8298:8298 -v ./pretrained-models:/app/pretrained-models -n viet-tts-service viet-tts:latest viettts server --host 0.0.0.0 --port 8298
-
-# Hiển thị danh sách giọng nói sẵn có
-docker exec viet-tts-service viettts show-voices
 ```
 
 ## 🚀 Sử dụng
@@ -109,11 +106,14 @@ viettts --help
 # Khởi động API Server
 viettts server --host 0.0.0.0 --port 8298
 
-# Tổng hợp giọng nói từ văn bản
+# Xem tất cả các giọng nói có sẵn
+viettts show-voices
+
+# Tổng hợp giọng nói từ văn bản với giọng có sẵn
 viettts synthesis --text "Xin chào" --voice 0 --output test.wav
 
-# Liệt kê tất cả các giọng nói có sẵn
-viettts show-voices
+# Sao chép giọng từ audio file bất kì
+viettts synthesis --text "Xin chào" --voice Download/voice.wav --output cloned.wav
 ```
 
 ### API Client
@@ -149,6 +149,10 @@ with client.audio.speech.with_streaming_response.create(
 
 #### CURL
 ```bash
+# Lấy danh sách giọng có sẵn
+curl --location http://0.0.0.0:8298/v1/voices
+
+# OpenAI API format
 curl http://localhost:8298/v1/audio/speech \
   -H "Authorization: Bearer viet-tts" \
   -H "Content-Type: application/json" \
@@ -158,6 +162,12 @@ curl http://localhost:8298/v1/audio/speech \
     "voice": "son-tung-mtp"
   }' \
   --output speech.wav
+
+# API với giọng từ file local
+curl --location http://0.0.0.0:8298/v1/tts \
+  --form 'text="xin chào"' \
+  --form 'audio_file=@"/home/viettts/Downloads/voice.mp4"' \
+  --output speech.wav
 ```
 
 #### Node

@@ -1,6 +1,6 @@
 <!-- # VietTTS: An Open-Source Vietnamese Text to Speech -->
 <p align="center">
-  <img src="assets/viet-tts-medium.png" style="width: 22%">
+  <img src="assets/viet-tts-medium.png" style="width: 200px">
   <h1 align="center"style="color: white; font-weight: bold; font-family:roboto"><span style="color: white; font-weight: bold; font-family:roboto">VietTTS</span>: An Open-Source Vietnamese Text to Speech</h1>
 </p>
 <p align="center">
@@ -20,11 +20,11 @@
 
 ## ⭐ Key Features
 - **TTS**: Text-to-Speech generation with any voice via prompt audio
-- **VC**: Voice Conversion (TODO)
+- **OpenAI-API-compatible**: Compatible with OpenAI's Text-to-Speech API format
 
 ## 🛠️ Installation
 
-VietTTS can be installed via either a Python installer or Docker.
+VietTTS can be installed via a Python installer (Linux only, with Windows and macOS support coming soon) or Docker.
 
 ### Python Installer
 ```bash
@@ -54,11 +54,8 @@ docker compose build
 # Run with docker-compose - will create server at: http://localhost:8298
 docker compose up -d
 
-# Run with docker run - will create server at: http://localhost:8298
+# Or run with docker run - will create server at: http://localhost:8298
 docker run -itd --gpu=alls -p 8298:8298 -v ./pretrained-models:/app/pretrained-models -n viet-tts-service viet-tts:latest viettts server --host 0.0.0.0 --port 8298
-
-# Show available voices
-docker exec viet-tts-service viettts show-voices
 ```
 
 ## 🚀 Usage
@@ -108,11 +105,14 @@ viettts --help
 # Start API Server
 viettts server --host 0.0.0.0 --port 8298
 
-# Synthesis speech from text
-viettts synthesis --text "Xin chào" --voice 0 --output test.wav
-
 # List all built-in voices
 viettts show-voices
+
+# Synthesize speech from text with built-in voices
+viettts synthesis --text "Xin chào" --voice 0 --output test.wav
+
+# Clone voice from a local audio file
+viettts synthesis --text "Xin chào" --voice Download/voice.wav --output cloned.wav
 ```
 
 ### API Client
@@ -144,14 +144,24 @@ with client.audio.speech.with_streaming_response.create(
 
 #### CURL
 ```bash
+# Get all built-in voices
+curl --location http://0.0.0.0:8298/v1/voices
+
+# OpenAI format (bult-in voices)
 curl http://localhost:8298/v1/audio/speech \
-  -H "Authorization: Bearer viet-tts" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "tts-1",
-    "input": "Xin chào Việt Nam.",
-    "voice": "son-tung-mtp"
-  }' \
+  -H "Authorization: Bearer viet-tts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "tts-1",
+    "input": "Xin chào Việt Nam.",
+    "voice": "son-tung-mtp"
+  }' \
+  --output speech.wav
+
+# API with voice from local file
+curl --location http://0.0.0.0:8298/v1/tts \
+  --form 'text="xin chào"' \
+  --form 'audio_file=@"/home/viettts/Downloads/voice.mp4"' \
   --output speech.wav
 ```
 

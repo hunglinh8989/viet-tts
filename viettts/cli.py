@@ -14,9 +14,9 @@ AUDIO_DIR = 'samples'
 MODEL_DIR = 'pretrained-models'
 
 @click.command('server')
-@click.option('-h', '--host', type=str, default='0.0.0.0')
-@click.option('-p', '--port', type=int, default=8298)
-@click.option('-w', '--workers', type=int, default=1)
+@click.option('-h', '--host', type=str, default='0.0.0.0', help="The host address to bind the server to. Default is '0.0.0.0'.")
+@click.option('-p', '--port', type=int, default=8298, help="The port number to bind the server to. Default is 8298.")
+@click.option('-w', '--workers', type=int, default=1, help="The number of worker processes to handle requests. Default is 1.")
 def start_server(host: str, port: int, workers: int):
     """Start API server (OpenAI TTS API compatible).
 
@@ -37,17 +37,14 @@ def start_server(host: str, port: int, workers: int):
 
 
 @click.command('synthesis')
-@click.option('-t', "--text", type=str, required=True)
-@click.option('-v', "--voice", type=str, default='1')
-@click.option('-s', "--speed", type=float, default=1)
-@click.option('-o', "--output", type=str, default='output.wav')
+@click.option('-t', "--text", type=str, required=True, help="The input text to synthesize into speech.")
+@click.option('-v', "--voice", type=str, default='1', help="The voice ID or file path to clone the voice from. Default is '1'.")
+@click.option('-s', "--speed", type=float, default=1, help="The speed multiplier for the speech. Default is 1 (normal speed).")
+@click.option('-o', "--output", type=str, default='output.wav', help="The file path to save the synthesized audio. Default is 'output.wav'.")
 def synthesis(text: str, voice: str, speed: float, output: str):
     """Synthesis audio from text and save to file.
 
-    Usage:
-        viettts synthesis --text 'Xin chào VietTTS' --voice nu-nhe-nhang --output test_nu-nhe-nhang.wav
-        viettts synthesis --text 'Chào bạn đến với Hà Nội' --voice 8 --speed 1.2 --output test_voice_8_speed_1.2.wav
-        viettts synthesis --text 'Bạn có thể sao chép giọng sẵn có' --voice Downloads/audio.wav
+    Usage: viettts synthesis --text 'Xin chào VietTTS' --voice nu-nhe-nhang --voice 8 --speed 1.2 --output test_nu-nhe-nhang.wav
     """
     logger.info("Starting synthesis")
     st = time.perf_counter()
@@ -107,7 +104,8 @@ def cli():
     """
     VietTTS CLI v0.1.0
     
-    Vietnamese Text To Speech and Voice Clone - License: Apache 2.0 - Author: <dangvansam dangvansam98@gmail.com>
+    Vietnamese Text To Speech and Voice Clone
+    License: Apache 2.0 - Author: <dangvansam dangvansam98@gmail.com>
     """
     pass
 

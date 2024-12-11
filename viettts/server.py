@@ -1,18 +1,23 @@
 import io
 import os
 import queue
+import random
 import subprocess
 import threading
 import wave
 
+import tempfile
+import shutil
+import requests
 import numpy as np
 from loguru import logger
+from datetime import datetime
 from typing import Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from anyio import CapacityLimiter
 from anyio.lowlevel import RunVar
-from fastapi import FastAPI, UploadFile, Form, File
-from fastapi.responses import StreamingResponse, JSONResponse, PlainTextResponse
+from fastapi import FastAPI, UploadFile, Form, File, HTTPException
+from fastapi.responses import StreamingResponse, JSONResponse, PlainTextResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from viettts.tts import TTS
@@ -27,8 +32,12 @@ tts_obj = None
 
 
 app = FastAPI(
-    title="VietTTS",
-    description="VietTTS API"
+    title="VietTTS API",
+    description="""
+    VietTTS API (https://github.com/dangvansam/viet-tts)
+    Vietnamese Text To Speech and Voice Clone
+    License: Apache 2.0 - Author: <dangvansam dangvansam98@gmail.com>
+    """
 )
 app.add_middleware(
     CORSMiddleware,
@@ -47,13 +56,17 @@ def generate_data(model_output):
     yield audio
 
 
-class GenerateSpeechRequest(BaseModel):
+class OpenAITTSRequest(BaseModel):
     input: str
     model: str = "tts-1"
-    voice: str = list(VOICE_MAP)[1]
+    voice: str = random.choice(list(VOICE_MAP))
     response_format: str = "wav"
     speed: float = 1.0
 
+class TTSRequest(BaseModel):
+    text: str
+    voice: str = random.choice(list(VOICE_MAP))
+    speed: float = 1.0
 
 def wav_chunk_header(sample_rate=22050, bit_depth=16, channels=1):
     buffer = io.BytesIO()
@@ -69,7 +82,11 @@ def wav_chunk_header(sample_rate=22050, bit_depth=16, channels=1):
 
 @app.get("/", response_class=PlainTextResponse)
 async def root():
-    return 'VietTTS API Server Is Runing'
+    return 'VietTTS API'
+
+@app.get("/health", response_class=PlainTextResponse)
+async def health():
+    return 'VietTTS API is running...'
 
 @app.get("/voices")
 @app.get("/v1/voices")
@@ -78,8 +95,9 @@ async def show_voices():
 
 @app.post("/audio/speech")
 @app.post("/v1/audio/speech")
-async def tts(tts_request: GenerateSpeechRequest):
-    logger.info(f"Generate speech request: {tts_request.dict()}")
+async def openai_api_tts(tts_request: OpenAITTSRequest):
+    logger.info(f"Received TTS request: {tts_request.dict()}")
+    
     if tts_request.voice.isdigit():
         voice_file = list(VOICE_MAP.values())[int(tts_request.voice)]
     else:
@@ -198,6 +216,117 @@ async def tts(tts_request: GenerateSpeechRequest):
         media_type=media_type,
         background=cleanup
     )
+
+@app.post("/tts")
+@app.post("/v1/tts")
+async def tts(
+    text: str = Form(...),
+    voice: str = Form("0"),
+    speed: float = Form(1.0),
+    audio_url: str = Form(None),
+    audio_file: UploadFile = File(None)
+):
+    logger.info(f"Received TTS request: text={text}, voice={voice}, speed={speed}, audio_url={audio_url}")
+    voice_file = None
+
+    # Case 1: Uploaded audio file
+    if audio_file:
+        temp_audio_file = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=f'.{audio_file.filename.split(".")[-1]}'
+        )
+        try:
+            with open(temp_audio_file.name, "wb") as temp_file:
+                shutil.copyfileobj(audio_file.file, temp_file)
+            voice_file = temp_audio_file.name
+            logger.info(f"Using uploaded audio file as voice: {voice_file}")
+        finally:
+            audio_file.file.close()
+
+    # Case 2: Audio URL
+    elif audio_url:
+        temp_audio_file = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=f'.{audio_url.lower().split(".")[-1]}'
+        )
+        try:
+            response = requests.get(audio_url, stream=True)
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail="Failed to fetch audio from URL")
+            with open(temp_audio_file.name, "wb") as temp_file:
+                shutil.copyfileobj(response.raw, temp_file)
+            voice_file = temp_audio_file.name
+            logger.info(f"Using audio URL as voice: {voice_file}")
+        finally:
+            response.close()
+
+    # Case 3: Predefined voice
+    elif voice:
+        if voice.isdigit():
+            voice_file = list(VOICE_MAP.values())[int(voice)]
+        else:
+            voice_file = VOICE_MAP.get(voice)
+
+        if not voice_file:
+            logger.error(f"Voice {voice} not found")
+            raise HTTPException(status_code=404, detail="Voice not found")
+    
+    else:
+        voice_file = random.choice(list(VOICE_MAP.values()))
+
+    # Error if no voice file is available
+    if not voice_file or not os.path.exists(voice_file):
+        raise HTTPException(status_code=400, detail="No valid voice file provided")
+
+    prompt_speech_16k = load_prompt_speech_from_file(
+        filepath=voice_file,
+        min_duration=3,
+        max_duration=5
+    )
+
+    temp_output_file = tempfile.NamedTemporaryFile(
+        delete=False, 
+        suffix=f"_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp3"
+    )
+
+    try:
+        model_output = tts_obj.inference_tts(
+            tts_text=text,
+            prompt_speech_16k=prompt_speech_16k,
+            speed=speed,
+            stream=False
+        )
+
+        raw_audio = b''.join(chunk['tts_speech'].numpy().tobytes() for chunk in model_output)
+        ffmpeg_args = [
+            "ffmpeg", "-loglevel", "error", "-y", "-f", "f32le", "-ar", "24000", "-ac", "1",
+            "-i", "-", "-f", "mp3", "-c:a", "libmp3lame", "-ab", "64k", temp_output_file.name
+        ]
+        ffmpeg_proc = subprocess.run(
+            ffmpeg_args,
+            input=raw_audio,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
+        if ffmpeg_proc.returncode != 0:
+            logger.error(f"FFmpeg error: {ffmpeg_proc.stderr.decode()}")
+            raise HTTPException(status_code=500, detail="Error during audio processing")
+
+        if not os.path.exists(temp_output_file.name):
+            logger.error(f"FFmpeg did not create the output file: {temp_output_file.name}")
+            raise HTTPException(status_code=500, detail="FFmpeg failed to produce the output file")
+
+        return FileResponse(
+            path=temp_output_file.name,
+            media_type="audio/mpeg",
+            filename=temp_output_file.name.split("/")[-1]
+        )
+
+    finally:
+        if audio_file or audio_url:
+            if os.path.exists(temp_audio_file.name):
+                os.unlink(temp_audio_file.name)
 
 
 @app.on_event("startup")
