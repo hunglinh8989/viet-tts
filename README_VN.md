@@ -23,7 +23,7 @@
 ## 🛠️ Cài đặt
 VietTTS có thể được cài đặt qua trình cài đặt Python (chỉ hỗ trợ Linux, Windows và macOS sẽ có trong tương lai) hoặc Docker.
 
-### Trình cài đặt Python
+### Trình cài đặt Python (Python>=3.10)
 
 ```bash
 git clone https://github.com/dangvansam/viet-tts.git

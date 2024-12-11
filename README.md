@@ -26,7 +26,7 @@
 
 VietTTS can be installed via a Python installer (Linux only, with Windows and macOS support coming soon) or Docker.
 
-### Python Installer
+### Python Installer (Python>=3.10)
 ```bash
 git clone https://github.com/dangvansam/viet-tts.git
 cd viet-tts
