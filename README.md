@@ -20,7 +20,7 @@
 
 ## ⭐ Key Features
 - **TTS**: Text-to-Speech generation with any voice via prompt audio
-- **VC**: Voice Conversion (TODO)
+- **OpenAI-API-compatible**: Compatible with OpenAI's Text-to-Speech API format
 
 ## 🛠️ Installation
 

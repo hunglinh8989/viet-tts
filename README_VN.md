@@ -18,7 +18,7 @@
 
 ## ⭐ Tính năng nổi bật
 - **TTS**: Tổng hợp giọng nói từ văn bản với bất kỳ giọng nào qua audio mẫu
-- **VC**: Chuyển đổi giọng nói (TODO)
+- **OpenAI-API-compatible**: Tương thích với API Text to Speech OpenAI
 
 ## 🛠️ Cài đặt
 VietTTS có thể được cài đặt qua trình cài đặt Python (chỉ hỗ trợ Linux, Windows và macOS sẽ có trong tương lai) hoặc Docker.
