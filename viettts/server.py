@@ -11,6 +11,7 @@ import shutil
 import requests
 import numpy as np
 from loguru import logger
+from datetime import datetime
 from typing import Any, List, Optional
 from pydantic import BaseModel
 from anyio import CapacityLimiter
@@ -33,7 +34,7 @@ tts_obj = None
 app = FastAPI(
     title="VietTTS API",
     description="""
-    VietTTS API (https://github.comdangvansam/viet-tts)
+    VietTTS API (https://github.com/dangvansam/viet-tts)
     Vietnamese Text To Speech and Voice Clone
     License: Apache 2.0 - Author: <dangvansam dangvansam98@gmail.com>
     """
@@ -230,7 +231,10 @@ async def tts(
 
     # Case 1: Uploaded audio file
     if audio_file:
-        temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+        temp_audio_file = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=f'.{audio_file.filename.split(".")[-1]}'
+        )
         try:
             with open(temp_audio_file.name, "wb") as temp_file:
                 shutil.copyfileobj(audio_file.file, temp_file)
@@ -241,7 +245,10 @@ async def tts(
 
     # Case 2: Audio URL
     elif audio_url:
-        temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+        temp_audio_file = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=f'.{audio_url.lower().split(".")[-1]}'
+        )
         try:
             response = requests.get(audio_url, stream=True)
             if response.status_code != 200:
@@ -271,18 +278,18 @@ async def tts(
     if not voice_file or not os.path.exists(voice_file):
         raise HTTPException(status_code=400, detail="No valid voice file provided")
 
-    # Load prompt speech
     prompt_speech_16k = load_prompt_speech_from_file(
         filepath=voice_file,
         min_duration=3,
         max_duration=5
     )
 
-    # Temporary file for audio output
-    temp_output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+    temp_output_file = tempfile.NamedTemporaryFile(
+        delete=False, 
+        suffix=f"_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp3"
+    )
 
     try:
-        # Generate TTS output
         model_output = tts_obj.inference_tts(
             tts_text=text,
             prompt_speech_16k=prompt_speech_16k,
@@ -290,7 +297,6 @@ async def tts(
             stream=False
         )
 
-        # Combine audio chunks and pass to ffmpeg for processing
         raw_audio = b''.join(chunk['tts_speech'].numpy().tobytes() for chunk in model_output)
         ffmpeg_args = [
             "ffmpeg", "-loglevel", "error", "-y", "-f", "f32le", "-ar", "24000", "-ac", "1",
@@ -307,18 +313,17 @@ async def tts(
             logger.error(f"FFmpeg error: {ffmpeg_proc.stderr.decode()}")
             raise HTTPException(status_code=500, detail="Error during audio processing")
 
+        if not os.path.exists(temp_output_file.name):
+            logger.error(f"FFmpeg did not create the output file: {temp_output_file.name}")
+            raise HTTPException(status_code=500, detail="FFmpeg failed to produce the output file")
+
         return FileResponse(
             path=temp_output_file.name,
             media_type="audio/mpeg",
-            filename="output.mp3"
+            filename=temp_output_file.name.split("/")[-1]
         )
 
     finally:
-        # Clean up temporary files
-        print(temp_output_file.name)
-
-        if os.path.exists(temp_output_file.name):
-            os.unlink(temp_output_file.name)
         if audio_file or audio_url:
             if os.path.exists(temp_audio_file.name):
                 os.unlink(temp_audio_file.name)

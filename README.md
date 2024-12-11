@@ -1,6 +1,6 @@
 <!-- # VietTTS: An Open-Source Vietnamese Text to Speech -->
 <p align="center">
-  <img src="assets/viet-tts-medium.png" style="width: 22%">
+  <img src="assets/viet-tts-medium.png" style="width: 200px">
   <h1 align="center"style="color: white; font-weight: bold; font-family:roboto"><span style="color: white; font-weight: bold; font-family:roboto">VietTTS</span>: An Open-Source Vietnamese Text to Speech</h1>
 </p>
 <p align="center">
