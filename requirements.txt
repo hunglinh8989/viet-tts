@@ -22,5 +22,5 @@ torch>=2.3.0
 torchaudio>=2.3.0
 transformers==4.41.2
 typer==0.12.3
-vinorm==0.2.1
+vinorm>=2.0.0
 WeTextProcessing==1.0.3
